@@ -22,7 +22,7 @@ app.get('/check-webhook', async (req, res) => {
   try {
     const response = await axios.get(`https://graph.facebook.com/v11.0/${PAGE_ID}/subscribed_apps`, {
       params: {
-        access_token: USER_ACCESS_TOKEN
+        access_token: PAGE_ACCESS_TOKEN
       }
     });
     res.json(response.data);
@@ -36,7 +36,7 @@ app.post('/disable-webhook', async (req, res) => {
   try {
     const response = await axios.delete(`https://graph.facebook.com/v11.0/${PAGE_ID}/subscribed_apps`, {
       params: {
-        access_token: USER_ACCESS_TOKEN
+        access_token: PAGE_ACCESS_TOKEN
       }
     });
     res.send('Webhook disabled manually.');
@@ -51,7 +51,7 @@ app.post('/enable-webhook', async (req, res) => {
   try {
     const response = await axios.post(`https://graph.facebook.com/v11.0/${PAGE_ID}/subscribed_apps`, null, {
       params: {
-        access_token: USER_ACCESS_TOKEN,
+        access_token: PAGE_ACCESS_TOKEN,
         subscribed_fields: 'messages'
       }
     });
@@ -67,7 +67,7 @@ async function disableWebhook() {
   try {
     const response = await axios.delete(`https://graph.facebook.com/v11.0/${PAGE_ID}/subscribed_apps`, {
       params: {
-        access_token: USER_ACCESS_TOKEN
+        access_token: PAGE_ACCESS_TOKEN
       }
     });
     console.log('Webhook disabled:', response.data);
@@ -81,7 +81,7 @@ async function enableWebhook() {
   try {
     const response = await axios.post(`https://graph.facebook.com/v11.0/${PAGE_ID}/subscribed_apps`, null, {
       params: {
-        access_token: USER_ACCESS_TOKEN,
+        access_token: PAGE_ACCESS_TOKEN,
         subscribed_fields: 'messages'
       }
     });
