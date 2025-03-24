@@ -77,3 +77,8 @@ cron.schedule('0 12 * * 6', async () => {
 });
 
 console.log('Webhook scheduler is running...');
+// Thử ngắt kết nối ngay lập tức
+console.log('Trying immediate webhook disconnection...');
+disableWebhook().then(result => {
+  console.log('Immediate disconnection result:', result);
+});
