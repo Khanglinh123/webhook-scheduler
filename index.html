@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Webhook Scheduler Control</title>
+</head>
+<body>
+  <h1>Webhook Scheduler Control</h1>
+  <button onclick="disableWebhook()">Disable Webhook</button>
+  <button onclick="enableWebhook()">Enable Webhook</button>
+
+  <script>
+    async function disableWebhook() {
+      try {
+        const response = await fetch('/disable-webhook', { method: 'POST' });
+        const text = await response.text();
+        alert(text);
+      } catch (error) {
+        alert('Error disabling webhook: ' + error.message);
+      }
+    }
+
+    async function enableWebhook() {
+      try {
+        const response = await fetch('/enable-webhook', { method: 'POST' });
+        const text = await response.text();
+        alert(text);
+      } catch (error) {
+        alert('Error enabling webhook: ' + error.message);
+      }
+    }
+  </script>
+</body>
+</html>
