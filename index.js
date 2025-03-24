@@ -1,5 +1,5 @@
 import express from 'express';
-import request from 'request';
+import axios from 'axios';
 import cron from 'node-cron';
 
 const PAGE_ID = '583129331554040';
@@ -10,36 +10,32 @@ const APP_ACCESS_TOKEN = '2315860602131202|1Odqilsh0sZGC_NXgT_uL7LL-x0';
 const USER_ACCESS_TOKEN = 'EAAg6Q1CKEwIBOZB6CjjwZCAhUJGl2p0NrblmlbiF6D1E5ilrUwiIpG4IW7XskVWa7WNGoNiwiiQnsPrQCyFJcTWZBilAtN3gXLP8goSZAtJfwoN95RCmO2SDkTXCGJYz6ZBxxdXbLrZCXomvJhjmNQpBoxoFaHZAZCg7fwzesOceQC3hrzdbGG0ZAsmJS5hQ84x3K3w3olZBOea2eassgSxSZB74euMus58ixdcE0YD0vCVIeqe';
 
 // Hàm để ngắt kết nối webhook
-function disableWebhook() {
-  request.delete({
-    url: `https://graph.facebook.com/v11.0/${PAGE_ID}/subscribed_apps`,
-    qs: {
-      access_token: USER_ACCESS_TOKEN
-    }
-  }, function(error, response, body) {
-    if (error) {
-      console.log('Error while disabling webhook:', error);
-    } else {
-      console.log('Webhook disabled:', body);
-    }
-  });
+async function disableWebhook() {
+  try {
+    const response = await axios.delete(`https://graph.facebook.com/v11.0/${PAGE_ID}/subscribed_apps`, {
+      params: {
+        access_token: USER_ACCESS_TOKEN
+      }
+    });
+    console.log('Webhook disabled:', response.data);
+  } catch (error) {
+    console.log('Error while disabling webhook:', error.response ? error.response.data : error.message);
+  }
 }
 
 // Hàm để kết nối lại webhook
-function enableWebhook() {
-  request.post({
-    url: `https://graph.facebook.com/v11.0/${PAGE_ID}/subscribed_apps`,
-    qs: {
-      access_token: USER_ACCESS_TOKEN,
-      subscribed_fields: 'messages'
-    }
-  }, function(error, response, body) {
-    if (error) {
-      console.log('Error while enabling webhook:', error);
-    } else {
-      console.log('Webhook enabled:', body);
-    }
-  });
+async function enableWebhook() {
+  try {
+    const response = await axios.post(`https://graph.facebook.com/v11.0/${PAGE_ID}/subscribed_apps`, null, {
+      params: {
+        access_token: USER_ACCESS_TOKEN,
+        subscribed_fields: 'messages'
+      }
+    });
+    console.log('Webhook enabled:', response.data);
+  } catch (error) {
+    console.log('Error while enabling webhook:', error.response ? error.response.data : error.message);
+  }
 }
 
 // Lên lịch ngắt kết nối webhook vào lúc 8:00 sáng mỗi ngày
