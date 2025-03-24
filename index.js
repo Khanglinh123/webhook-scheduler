@@ -1,7 +1,6 @@
-const express = require('express');
-const request = require('request');
-const cron = require('node-cron');
-const app = express();
+import express from 'express';
+import request from 'request';
+import cron from 'node-cron';
 
 const PAGE_ID = '583129331554040';
 const APP_ID = '231586060213120';
@@ -54,6 +53,8 @@ cron.schedule('0 17 * * *', function() {
   console.log('Enabling webhook at 5:00 PM');
   enableWebhook();
 });
+
+const app = express();
 
 app.listen(10000, () => {
   console.log('Server running on port 10000');
