@@ -8,6 +8,9 @@ const APP_ID = '231586060213120'; // ID ứng dụng của bạn từ ảnh
 const APP_SECRET = 'ecb35f0156838eb14f7cb747f3544887'; // Mã bí mật ứng dụng bạn đã chia sẻ trước đó
 const PAGE_ACCESS_TOKEN = 'EAAg6Q1CKEwIBOxillAuZAjLb2dHUbxgHsZAQQvXSkREWcoXFvpiRwR3Jbh7TIJy70PZBBgO1BGTfkUxVpiLIEwTLSZBKqS2mZCoVGv9NGCA1q59bEOWzoQhL1KTQCrmQ1BU3ZB4Pa16GZCoLQrWIlIv1Qk9Ra1ZC59bml3FPrHqLph2lcdsBF9GJNejNe5AUmJ4RwQZDZD';
 
+// App Access Token được cung cấp
+const APP_ACCESS_TOKEN = '2315860602131202|1Odqilsh0sZGC_NXgT_uL7LL-x0';
+
 // Biến để theo dõi trạng thái
 let isWebhookEnabled = true;
 let lastApiCallSuccess = null;
@@ -18,14 +21,8 @@ let startupTime = new Date();
 // Hàm lấy App Access Token
 async function getAppAccessToken() {
   try {
-    console.log('Getting App Access Token...');
-    const response = await fetch(
-      `https://graph.facebook.com/oauth/access_token?client_id=${APP_ID}&client_secret=${APP_SECRET}&grant_type=client_credentials`
-    );
-    
-    const data = await response.json();
-    console.log('App Access Token obtained');
-    return data.access_token;
+    console.log('Using provided App Access Token');
+    return APP_ACCESS_TOKEN;
   } catch (error) {
     console.error('Error getting App Access Token:', error);
     throw error;
