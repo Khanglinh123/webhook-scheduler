@@ -41,7 +41,8 @@ app.post('/disable-webhook', async (req, res) => {
     });
     res.send('Webhook disabled manually.');
   } catch (error) {
-    res.status(500).send('Error disabling webhook: ' + (error.response ? error.response.data : error.message));
+    console.error('Error disabling webhook:', error.response ? error.response.data : error.message);
+    res.status(500).send('Error disabling webhook: ' + JSON.stringify(error.response ? error.response.data : error.message));
   }
 });
 
@@ -56,7 +57,8 @@ app.post('/enable-webhook', async (req, res) => {
     });
     res.send('Webhook enabled manually.');
   } catch (error) {
-    res.status(500).send('Error enabling webhook: ' + (error.response ? error.response.data : error.message));
+    console.error('Error enabling webhook:', error.response ? error.response.data : error.message);
+    res.status(500).send('Error enabling webhook: ' + JSON.stringify(error.response ? error.response.data : error.message));
   }
 });
 
