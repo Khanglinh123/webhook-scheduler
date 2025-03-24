@@ -14,7 +14,7 @@ app.use(express.static('public')); // Serve static files from the 'public' direc
 
 // Route để xử lý yêu cầu GET đến đường dẫn gốc "/"
 app.get('/', (req, res) => {
-  res.send('Webhook Scheduler is running!');
+  res.sendFile(__dirname + '/public/index.html'); // Serve the index.html file
 });
 
 // Route để kiểm tra trạng thái webhook
