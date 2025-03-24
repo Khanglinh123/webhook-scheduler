@@ -1,12 +1,12 @@
 import fetch from 'node-fetch';
 import cron from 'node-cron';
 import express from 'express';
-import { format, utcToZonedTime } from 'date-fns-tz';
 
-// Thông tin Page
+// Thông tin ứng dụng và Page
 const PAGE_ID = '583129331554040';
+const APP_ID = '231586060213120'; // ID ứng dụng của bạn từ ảnh
+const APP_SECRET = 'ecb35f0156838eb14f7cb747f3544887'; // Mã bí mật ứng dụng bạn đã chia sẻ trước đó
 const PAGE_ACCESS_TOKEN = 'EAAg6Q1CKEwIBOxillAuZAjLb2dHUbxgHsZAQQvXSkREWcoXFvpiRwR3Jbh7TIJy70PZBBgO1BGTfkUxVpiLIEwTLSZBKqS2mZCoVGv9NGCA1q59bEOWzoQhL1KTQCrmQ1BU3ZB4Pa16GZCoLQrWIlIv1Qk9Ra1ZC59bml3FPrHqLph2lcdsBF9GJNejNe5AUmJ4RwQZDZD';
-const TIMEZONE = 'Asia/Ho_Chi_Minh';
 
 // Biến để theo dõi trạng thái
 let isWebhookEnabled = true;
@@ -15,40 +15,53 @@ let lastApiCallTime = null;
 let lastApiCallResult = null;
 let startupTime = new Date();
 
-// Hàm lấy thời gian hiện tại theo múi giờ Việt Nam
-function getCurrentTimeVN() {
-  const now = new Date();
-  const vnTime = utcToZonedTime(now, TIMEZONE);
-  return format(vnTime, 'yyyy-MM-dd HH:mm:ss (OOOO)', { timeZone: TIMEZONE });
-}
-
-// Hàm ghi log với timestamp
-function logWithTime(message) {
-  console.log(`[${getCurrentTimeVN()}] ${message}`);
+// Hàm lấy App Access Token
+async function getAppAccessToken() {
+  try {
+    console.log('Getting App Access Token...');
+    const response = await fetch(
+      `https://graph.facebook.com/oauth/access_token?client_id=${APP_ID}&client_secret=${APP_SECRET}&grant_type=client_credentials`
+    );
+    
+    const data = await response.json();
+    console.log('App Access Token obtained');
+    return data.access_token;
+  } catch (error) {
+    console.error('Error getting App Access Token:', error);
+    throw error;
+  }
 }
 
 // Function để kiểm tra trạng thái webhook hiện tại
 async function checkWebhookStatus() {
   try {
-    logWithTime('Checking webhook status...');
+    console.log('Checking webhook status...');
+    const appAccessToken = await getAppAccessToken();
+    
     const response = await fetch(
-      `https://graph.facebook.com/v18.0/${PAGE_ID}/subscribed_apps?access_token=${PAGE_ACCESS_TOKEN}`
+      `https://graph.facebook.com/v18.0/${PAGE_ID}/subscribed_apps?access_token=${appAccessToken}`
     );
     
     const result = await response.json();
-    logWithTime(`Current webhook status: ${JSON.stringify(result)}`);
+    console.log(`Current webhook status: ${JSON.stringify(result)}`);
     
     // Cập nhật trạng thái dựa trên kết quả
     if (result.data && Array.isArray(result.data)) {
       isWebhookEnabled = result.data.length > 0;
-      logWithTime(`Webhook is currently ${isWebhookEnabled ? 'ENABLED' : 'DISABLED'}`);
+      console.log(`Webhook is currently ${isWebhookEnabled ? 'ENABLED' : 'DISABLED'}`);
     } else if (result.error) {
-      logWithTime(`Error checking webhook status: ${result.error.message}`);
+      console.log(`Error checking webhook status: ${result.error.message}`);
     }
+    
+    lastApiCallTime = new Date();
+    lastApiCallResult = result;
     
     return result;
   } catch (error) {
-    logWithTime(`Error checking webhook status: ${error.message}`);
+    console.log(`Error checking webhook status: ${error.message}`);
+    lastApiCallTime = new Date();
+    lastApiCallSuccess = false;
+    lastApiCallResult = { error: error.message };
     return { error: error.message };
   }
 }
@@ -56,20 +69,22 @@ async function checkWebhookStatus() {
 // Function để vô hiệu hóa webhook
 async function disableWebhook() {
   try {
-    logWithTime('Attempting to disable webhook...');
+    console.log('Attempting to disable webhook...');
+    const appAccessToken = await getAppAccessToken();
+    
     const unsubscribeResponse = await fetch(
-      `https://graph.facebook.com/v18.0/${PAGE_ID}/subscribed_apps?access_token=${PAGE_ACCESS_TOKEN}`,
+      `https://graph.facebook.com/v18.0/${PAGE_ID}/subscribed_apps?access_token=${appAccessToken}`,
       {
         method: 'DELETE'
       }
     );
     
     const responseText = await unsubscribeResponse.text();
-    logWithTime(`Raw disable response: ${responseText}`);
+    console.log(`Raw disable response: ${responseText}`);
     
     try {
       const result = JSON.parse(responseText);
-      logWithTime(`Webhook disable result: ${JSON.stringify(result)}`);
+      console.log(`Webhook disable result: ${JSON.stringify(result)}`);
       
       // Cập nhật trạng thái
       lastApiCallSuccess = result.success === true;
@@ -78,14 +93,14 @@ async function disableWebhook() {
       
       if (lastApiCallSuccess) {
         isWebhookEnabled = false;
-        logWithTime('Webhook successfully DISABLED');
+        console.log('Webhook successfully DISABLED');
       } else {
-        logWithTime('Failed to disable webhook');
+        console.log('Failed to disable webhook');
       }
       
       return result;
     } catch (e) {
-      logWithTime(`Could not parse disable response as JSON: ${e.message}`);
+      console.log(`Could not parse disable response as JSON: ${e.message}`);
       
       // Cập nhật trạng thái
       lastApiCallSuccess = false;
@@ -95,7 +110,7 @@ async function disableWebhook() {
       return { success: false, error: 'Parse error', raw: responseText };
     }
   } catch (error) {
-    logWithTime(`Error disabling webhook: ${error.message}`);
+    console.log(`Error disabling webhook: ${error.message}`);
     
     // Cập nhật trạng thái
     lastApiCallSuccess = false;
@@ -109,9 +124,11 @@ async function disableWebhook() {
 // Function để kích hoạt webhook
 async function enableWebhook() {
   try {
-    logWithTime('Attempting to enable webhook...');
+    console.log('Attempting to enable webhook...');
+    const appAccessToken = await getAppAccessToken();
+    
     const subscribeResponse = await fetch(
-      `https://graph.facebook.com/v18.0/${PAGE_ID}/subscribed_apps?access_token=${PAGE_ACCESS_TOKEN}`,
+      `https://graph.facebook.com/v18.0/${PAGE_ID}/subscribed_apps?access_token=${appAccessToken}`,
       {
         method: 'POST',
         headers: {
@@ -124,11 +141,11 @@ async function enableWebhook() {
     );
     
     const responseText = await subscribeResponse.text();
-    logWithTime(`Raw enable response: ${responseText}`);
+    console.log(`Raw enable response: ${responseText}`);
     
     try {
       const result = JSON.parse(responseText);
-      logWithTime(`Webhook enable result: ${JSON.stringify(result)}`);
+      console.log(`Webhook enable result: ${JSON.stringify(result)}`);
       
       // Cập nhật trạng thái
       lastApiCallSuccess = result.success === true;
@@ -137,14 +154,14 @@ async function enableWebhook() {
       
       if (lastApiCallSuccess) {
         isWebhookEnabled = true;
-        logWithTime('Webhook successfully ENABLED');
+        console.log('Webhook successfully ENABLED');
       } else {
-        logWithTime('Failed to enable webhook');
+        console.log('Failed to enable webhook');
       }
       
       return result;
     } catch (e) {
-      logWithTime(`Could not parse enable response as JSON: ${e.message}`);
+      console.log(`Could not parse enable response as JSON: ${e.message}`);
       
       // Cập nhật trạng thái
       lastApiCallSuccess = false;
@@ -154,7 +171,7 @@ async function enableWebhook() {
       return { success: false, error: 'Parse error', raw: responseText };
     }
   } catch (error) {
-    logWithTime(`Error enabling webhook: ${error.message}`);
+    console.log(`Error enabling webhook: ${error.message}`);
     
     // Cập nhật trạng thái
     lastApiCallSuccess = false;
@@ -165,57 +182,47 @@ async function enableWebhook() {
   }
 }
 
-// Kiểm tra trạng thái webhook khi khởi động
-logWithTime('Webhook scheduler starting...');
-logWithTime(`Server timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}`);
-logWithTime(`Target timezone: ${TIMEZONE}`);
-logWithTime(`Current time in server timezone: ${new Date().toString()}`);
-logWithTime(`Current time in Vietnam: ${getCurrentTimeVN()}`);
-
-// Kiểm tra trạng thái webhook hiện tại
-checkWebhookStatus();
-
 // Lên lịch hàng ngày
 // Thứ 2-6: Tắt lúc 8:00 sáng, bật lúc 17:00 chiều
 cron.schedule('0 8 * * 1-5', async () => {
-  logWithTime('SCHEDULED TASK: Disabling webhook for weekday...');
+  console.log('SCHEDULED TASK: Disabling webhook for weekday...');
   await disableWebhook();
   
   // Kiểm tra lại sau 1 phút
   setTimeout(checkWebhookStatus, 60000);
 }, {
-  timezone: TIMEZONE
+  timezone: "Asia/Ho_Chi_Minh"
 });
 
 cron.schedule('0 17 * * 1-5', async () => {
-  logWithTime('SCHEDULED TASK: Enabling webhook for weekday evening...');
+  console.log('SCHEDULED TASK: Enabling webhook for weekday evening...');
   await enableWebhook();
   
   // Kiểm tra lại sau 1 phút
   setTimeout(checkWebhookStatus, 60000);
 }, {
-  timezone: TIMEZONE
+  timezone: "Asia/Ho_Chi_Minh"
 });
 
 // Thứ 7: Tắt lúc 8:00 sáng, bật lúc 12:00 trưa
 cron.schedule('0 8 * * 6', async () => {
-  logWithTime('SCHEDULED TASK: Disabling webhook for Saturday morning...');
+  console.log('SCHEDULED TASK: Disabling webhook for Saturday morning...');
   await disableWebhook();
   
   // Kiểm tra lại sau 1 phút
   setTimeout(checkWebhookStatus, 60000);
 }, {
-  timezone: TIMEZONE
+  timezone: "Asia/Ho_Chi_Minh"
 });
 
 cron.schedule('0 12 * * 6', async () => {
-  logWithTime('SCHEDULED TASK: Enabling webhook for Saturday afternoon...');
+  console.log('SCHEDULED TASK: Enabling webhook for Saturday afternoon...');
   await enableWebhook();
   
   // Kiểm tra lại sau 1 phút
   setTimeout(checkWebhookStatus, 60000);
 }, {
-  timezone: TIMEZONE
+  timezone: "Asia/Ho_Chi_Minh"
 });
 
 // Tạo server Express để hiển thị trạng thái và cung cấp điều khiển thủ công
@@ -260,7 +267,7 @@ app.get('/', (req, res) => {
               ${isWebhookEnabled ? 'ENABLED' : 'DISABLED'}
             </span>
           </p>
-          <p>Current time in Vietnam: ${getCurrentTimeVN()}</p>
+          <p>Current time in Vietnam: ${new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })} (GMT+07:00)</p>
           <div class="actions">
             <a href="/disable" class="button">Disable Webhook</a>
             <a href="/enable" class="button">Enable Webhook</a>
@@ -340,12 +347,13 @@ app.get('/check', async (req, res) => {
   res.redirect('/');
 });
 
+// Kiểm tra trạng thái webhook khi khởi động
+console.log('Webhook scheduler starting...');
+checkWebhookStatus();
+
 // Khởi động server
 app.listen(PORT, () => {
-  logWithTime(`Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
 
-// Thử ngắt kết nối ngay lập tức (bỏ comment dòng dưới để kích hoạt)
-// disableWebhook();
-
-logWithTime('Webhook scheduler setup complete!');
+console.log('Webhook scheduler setup complete!');
