@@ -9,6 +9,13 @@ const PAGE_ACCESS_TOKEN = 'EAAg6Q1CKEwIBOxillAuZAjLb2dHUbxgHsZAQQvXSkREWcoXFvpiR
 const APP_ACCESS_TOKEN = '2315860602131202|1Odqilsh0sZGC_NXgT_uL7LL-x0';
 const USER_ACCESS_TOKEN = 'EAAg6Q1CKEwIBOZB6CjjwZCAhUJGl2p0NrblmlbiF6D1E5ilrUwiIpG4IW7XskVWa7WNGoNiwiiQnsPrQCyFJcTWZBilAtN3gXLP8goSZAtJfwoN95RCmO2SDkTXCGJYz6ZBxxdXbLrZCXomvJhjmNQpBoxoFaHZAZCg7fwzesOceQC3hrzdbGG0ZAsmJS5hQ84x3K3w3olZBOea2eassgSxSZB74euMus58ixdcE0YD0vCVIeqe';
 
+const app = express();
+
+// Route để xử lý yêu cầu GET đến đường dẫn gốc "/"
+app.get('/', (req, res) => {
+  res.send('Webhook Scheduler is running!');
+});
+
 // Hàm để ngắt kết nối webhook
 async function disableWebhook() {
   try {
@@ -49,8 +56,6 @@ cron.schedule('0 17 * * *', function() {
   console.log('Enabling webhook at 5:00 PM');
   enableWebhook();
 });
-
-const app = express();
 
 app.listen(10000, () => {
   console.log('Server running on port 10000');
