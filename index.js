@@ -7,9 +7,9 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Thông tin ứng dụng và Page
 const APP_ID = '231586060213120';
 const APP_SECRET = 'ecb35f0156838eb14f7cb747f3544887';
-let USER_ACCESS_TOKEN = 'EAAg6Q1CKEwIBOZB6CjjwZCAhUJGl2p0NrblmlbiF6D1E5ilrUwiIpG4IW7XskVWa7WNGoNiwiiQnsPrQCyFJcTWZBilAtN3gXLP8goSZAtJfwoN95RCmO2SDkTXCGJYz6ZBxxdXbLrZCXomvJhjmNQpBoxoFaHZAZCg7fwzesOceQC3hrzdbGG0ZAsmJS5hQ84x3K3w3olZBOea2eassgSxSZB74euMus58ixdcE0YD0vCVIeqe';
 
 // Danh sách các trang và mã truy cập của chúng
 const pages = [
@@ -161,7 +161,14 @@ const indexHtml = `
 
     function checkWebhook(pageId) {
       fetch(\`/api/check-webhook?pageId=\${pageId}\`)
-        .then(response => response.json())
+        .then(response => {
+          if (!response.ok) {
+            return response.text().then(text => {
+              throw new Error(text);
+            });
+          }
+          return response.json();
+        })
         .then(data => {
           showStatus(data);
           loadPages(); // Reload pages to update status
@@ -173,29 +180,53 @@ const indexHtml = `
     }
 
     function disableWebhook(pageId) {
-      fetch(\`/api/disable-webhook?pageId=\${pageId}\`, { method: 'POST' })
-        .then(response => response.text())
-        .then(data => {
-          showStatus({ message: data });
-          loadPages(); // Reload pages to update status
-        })
-        .catch(error => {
-          console.error('Error disabling webhook:', error);
-          showStatus({ error: error.toString() });
-        });
+      fetch(\`/api/disable-webhook?pageId=\${pageId}\`, { 
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(response => {
+        if (!response.ok) {
+          return response.text().then(text => {
+            throw new Error(text);
+          });
+        }
+        return response.text();
+      })
+      .then(data => {
+        showStatus({ message: data });
+        loadPages(); // Reload pages to update status
+      })
+      .catch(error => {
+        console.error('Error disabling webhook:', error);
+        showStatus({ error: error.toString() });
+      });
     }
 
     function enableWebhook(pageId) {
-      fetch(\`/api/enable-webhook?pageId=\${pageId}\`, { method: 'POST' })
-        .then(response => response.text())
-        .then(data => {
-          showStatus({ message: data });
-          loadPages(); // Reload pages to update status
-        })
-        .catch(error => {
-          console.error('Error enabling webhook:', error);
-          showStatus({ error: error.toString() });
-        });
+      fetch(\`/api/enable-webhook?pageId=\${pageId}\`, { 
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(response => {
+        if (!response.ok) {
+          return response.text().then(text => {
+            throw new Error(text);
+          });
+        }
+        return response.text();
+      })
+      .then(data => {
+        showStatus({ message: data });
+        loadPages(); // Reload pages to update status
+      })
+      .catch(error => {
+        console.error('Error enabling webhook:', error);
+        showStatus({ error: error.toString() });
+      });
     }
 
     function showStatus(data) {
@@ -211,21 +242,10 @@ const indexHtml = `
 
 fs.writeFileSync('./public/index.html', indexHtml);
 
-// Hàm để lấy token dựa trên loại token và page_id
-function getToken(tokenType, pageId) {
-  const page = pages.find(p => p.page_id === pageId);
-  if (tokenType === 'user') {
-    return USER_ACCESS_TOKEN;
-  } else if (page) {
-    return page.page_access_token;
-  } else {
-    throw new Error(`Page with ID ${pageId} not found`);
-  }
-}
-
 // Hàm để lấy App Access Token
 async function getAppAccessToken() {
   try {
+    console.log('Getting App Access Token...');
     const response = await axios.get(`https://graph.facebook.com/oauth/access_token`, {
       params: {
         client_id: APP_ID,
@@ -233,33 +253,13 @@ async function getAppAccessToken() {
         grant_type: 'client_credentials'
       }
     });
+    console.log('App Access Token obtained');
     return response.data.access_token;
   } catch (error) {
-    console.error('Error getting app access token:', error.response ? error.response.data : error.message);
+    console.error('Error getting App Access Token:', error.response ? error.response.data : error.message);
     throw error;
   }
 }
-
-// Hàm để làm mới mã truy cập người dùng
-async function refreshUserAccessToken() {
-  try {
-    const response = await axios.get(`https://graph.facebook.com/oauth/access_token`, {
-      params: {
-        grant_type: 'fb_exchange_token',
-        client_id: APP_ID,
-        client_secret: APP_SECRET,
-        fb_exchange_token: USER_ACCESS_TOKEN
-      }
-    });
-    USER_ACCESS_TOKEN = response.data.access_token;
-    console.log('User access token refreshed:', USER_ACCESS_TOKEN);
-  } catch (error) {
-    console.error('Error refreshing user access token:', error.response ? error.response.data : error.message);
-  }
-}
-
-// Làm mới mã truy cập sau mỗi 55 ngày
-setInterval(refreshUserAccessToken, 55 * 24 * 60 * 60 * 1000); // 55 days in milliseconds
 
 // API để lấy danh sách trang
 app.get('/api/pages', (req, res) => {
@@ -300,7 +300,7 @@ app.get('/api/check-webhook', async (req, res) => {
 });
 
 // API để ngắt kết nối webhook
-app.post('/api/disable-webhook', async (req, res) => {
+app.all('/api/disable-webhook', async (req, res) => {
   const { pageId } = req.query;
   
   try {
@@ -324,7 +324,7 @@ app.post('/api/disable-webhook', async (req, res) => {
 });
 
 // API để kích hoạt webhook
-app.post('/api/enable-webhook', async (req, res) => {
+app.all('/api/enable-webhook', async (req, res) => {
   const { pageId } = req.query;
   
   try {
