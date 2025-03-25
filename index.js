@@ -7,7 +7,7 @@ const APP_ID = '231586060213120';
 const APP_SECRET = 'ecb35f0156838eb14f7cb747f3544887';
 const PAGE_ACCESS_TOKEN = 'EAAg6Q1CKEwIBOxillAuZAjLb2dHUbxgHsZAQQvXSkREWcoXFvpiRwR3Jbh7TIJy70PZBBgO1BGTfkUxVpiLIEwTLSZBKqS2mZCoVGv9NGCA1q59bEOWzoQhL1KTQCrmQ1BU3ZB4Pa16GZCoLQrWIlIv1Qk9Ra1ZC59bml3FPrHqLph2lcdsBF9GJNejNe5AUmJ4RwQZDZD';
 const APP_ACCESS_TOKEN = '2315860602131202|1Odqilsh0sZGC_NXgT_uL7LL-x0';
-const USER_ACCESS_TOKEN = 'EAAg6Q1CKEwIBOZB6CjjwZCAhUJGl2p0NrblmlbiF6D1E5ilrUwiIpG4IW7XskVWa7WNGoNiwiiQnsPrQCyFJcTWZBilAtN3gXLP8goSZAtJfwoN95RCmO2SDkTXCGJYz6ZBxxdXbLrZCXomvJhjmNQpBoxoFaHZAZCg7fwzesOceQC3hrzdbGG0ZAsmJS5hQ84x3K3w3olZBOea2eassgSxSZB74euMus58ixdcE0YD0vCVIeqe';
+let USER_ACCESS_TOKEN = 'EAAg6Q1CKEwIBOZB6CjjwZCAhUJGl2p0NrblmlbiF6D1E5ilrUwiIpG4IW7XskVWa7WNGoNiwiiQnsPrQCyFJcTWZBilAtN3gXLP8goSZAtJfwoN95RCmO2SDkTXCGJYz6ZBxxdXbLrZCXomvJhjmNQpBoxoFaHZAZCg7fwzesOceQC3hrzdbGG0ZAsmJS5hQ84x3K3w3olZBOea2eassgSxSZB74euMus58ixdcE0YD0vCVIeqe';
 
 const app = express();
 app.use(express.static('public')); // Serve static files from the 'public' directory
@@ -22,6 +22,27 @@ function getToken(tokenType) {
     return PAGE_ACCESS_TOKEN;
   }
 }
+
+// Hàm để làm mới mã truy cập người dùng
+async function refreshUserAccessToken() {
+  try {
+    const response = await axios.get(`https://graph.facebook.com/oauth/access_token`, {
+      params: {
+        grant_type: 'fb_exchange_token',
+        client_id: APP_ID,
+        client_secret: APP_SECRET,
+        fb_exchange_token: USER_ACCESS_TOKEN
+      }
+    });
+    USER_ACCESS_TOKEN = response.data.access_token;
+    console.log('User access token refreshed:', USER_ACCESS_TOKEN);
+  } catch (error) {
+    console.error('Error refreshing user access token:', error.response ? error.response.data : error.message);
+  }
+}
+
+// Làm mới mã truy cập sau mỗi 55 ngày
+setInterval(refreshUserAccessToken, 55 * 24 * 60 * 60 * 1000); // 55 days in milliseconds
 
 // Route để xử lý yêu cầu GET đến đường dẫn gốc "/"
 app.get('/', (req, res) => {
@@ -131,3 +152,12 @@ app.listen(10000, () => {
   console.log('Server running on port 10000');
   console.log('Webhook scheduler setup complete!');
 });
+````
+
+### Đẩy thay đổi lên GitHub và triển khai lại trên Render
+
+1. **Lưu các thay đổi**: Lưu tất cả các thay đổi trong các tệp `index.js` và `index.html`.
+2. **Đẩy thay đổi lên GitHub**: Đảm bảo rằng bạn đã đẩy các thay đổi này lên kho GitHub của mình.
+3. **Triển khai lại trên Render**: Truy cập trang quản lý của ứng dụng trên Render và triển khai lại ứng dụng của bạn.
+
+Bằng cách này, mã truy cập của bạn sẽ được làm mới tự động trước khi hết hạn và webhook sẽ được tắt/bật theo lịch trình đã định.
