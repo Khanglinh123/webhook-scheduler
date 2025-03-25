@@ -25,7 +25,7 @@ const APP_SECRET = process.env.APP_SECRET;
 const APP_ACCESS_TOKEN = process.env.APP_ACCESS_TOKEN;
 const USER_ACCESS_TOKEN = process.env.USER_ACCESS_TOKEN;
 
-const app = express();  // Khởi tạo biến app
+const app = express();
 app.use(express.static('public')); // Serve static files from the 'public' directory
 
 // Hàm để lấy thông tin trang dựa trên chỉ số trang
@@ -53,8 +53,9 @@ function getToken(tokenType) {
 // Route để kiểm tra trạng thái webhook
 app.get('/check-webhook', async (req, res) => {
   const tokenType = req.query.tokenType || 'page:1';
-  const pageInfo = getPageInfo(tokenType.split(':')[1]);
-  const accessToken = pageInfo ? pageInfo.token : getToken(tokenType);
+  const pageIndex = tokenType.split(':')[1];
+  const pageInfo = getPageInfo(pageIndex);
+  const accessToken = getToken(tokenType);
 
   if (!pageInfo) {
     return res.status(400).json({ error: 'Invalid token type' });
@@ -75,8 +76,9 @@ app.get('/check-webhook', async (req, res) => {
 // Route để ngắt kết nối webhook thủ công
 app.post('/disable-webhook', async (req, res) => {
   const tokenType = req.query.tokenType || 'page:1';
-  const pageInfo = getPageInfo(tokenType.split(':')[1]);
-  const accessToken = pageInfo ? pageInfo.token : getToken(tokenType);
+  const pageIndex = tokenType.split(':')[1];
+  const pageInfo = getPageInfo(pageIndex);
+  const accessToken = getToken(tokenType);
 
   if (!pageInfo) {
     return res.status(400).json({ error: 'Invalid token type' });
@@ -98,8 +100,9 @@ app.post('/disable-webhook', async (req, res) => {
 // Route để kích hoạt lại webhook thủ công
 app.post('/enable-webhook', async (req, res) => {
   const tokenType = req.query.tokenType || 'page:1';
-  const pageInfo = getPageInfo(tokenType.split(':')[1]);
-  const accessToken = pageInfo ? pageInfo.token : getToken(tokenType);
+  const pageIndex = tokenType.split(':')[1];
+  const pageInfo = getPageInfo(pageIndex);
+  const accessToken = getToken(tokenType);
 
   if (!pageInfo) {
     return res.status(400).json({ error: 'Invalid token type' });
@@ -121,8 +124,9 @@ app.post('/enable-webhook', async (req, res) => {
 
 // Hàm để ngắt kết nối webhook
 async function disableWebhook(tokenType = 'page:1') {
-  const pageInfo = getPageInfo(tokenType.split(':')[1]);
-  const accessToken = pageInfo ? pageInfo.token : getToken(tokenType);
+  const pageIndex = tokenType.split(':')[1];
+  const pageInfo = getPageInfo(pageIndex);
+  const accessToken = getToken(tokenType);
 
   if (!pageInfo) {
     console.log('Invalid token type');
@@ -143,8 +147,9 @@ async function disableWebhook(tokenType = 'page:1') {
 
 // Hàm để kết nối lại webhook
 async function enableWebhook(tokenType = 'page:1') {
-  const pageInfo = getPageInfo(tokenType.split(':')[1]);
-  const accessToken = pageInfo ? pageInfo.token : getToken(tokenType);
+  const pageIndex = tokenType.split(':')[1];
+  const pageInfo = getPageInfo(pageIndex);
+  const accessToken = getToken(tokenType);
 
   if (!pageInfo) {
     console.log('Invalid token type');
