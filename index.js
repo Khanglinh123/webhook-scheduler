@@ -25,7 +25,7 @@ const APP_SECRET = process.env.APP_SECRET;
 const APP_ACCESS_TOKEN = process.env.APP_ACCESS_TOKEN;
 const USER_ACCESS_TOKEN = process.env.USER_ACCESS_TOKEN;
 
-const app = express();  // Chúng ta cần khai báo và khởi tạo biến app ở đây
+const app = express();  // Khởi tạo biến app
 app.use(express.static('public')); // Serve static files from the 'public' directory
 
 // Hàm để lấy thông tin trang dựa trên chỉ số trang
