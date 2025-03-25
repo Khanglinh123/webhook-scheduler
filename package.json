@@ -1,13 +1,18 @@
 {
   "name": "webhook-scheduler",
   "version": "1.0.0",
-  "type": "module",
-  "dependencies": {
-    "axios": "^0.27.2",
-    "node-cron": "^3.0.2",
-    "express": "^4.18.2"
-  },
+  "description": "",
+  "main": "pages/page1/index.js",
   "scripts": {
-    "start": "node index.js"
+    "start-page1": "node pages/page1/index.js",
+    "start-page2": "node pages/page2/index.js",
+    "start-page3": "node pages/page3/index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.21.1",
+    "cron": "^1.8.2",
+    "express": "^4.17.1"
   }
 }
