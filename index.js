@@ -7,11 +7,12 @@ const APP_ID = '231586060213120';
 const APP_SECRET = 'ecb35f0156838eb14f7cb747f3544887';
 const PAGE_ACCESS_TOKEN = 'EAAg6Q1CKEwIBOxillAuZAjLb2dHUbxgHsZAQQvXSkREWcoXFvpiRwR3Jbh7TIJy70PZBBgO1BGTfkUxVpiLIEwTLSZBKqS2mZCoVGv9NGCA1q59bEOWzoQhL1KTQCrmQ1BU3ZB4Pa16GZCoLQrWIlIv1Qk9Ra1ZC59bml3FPrHqLph2lcdsBF9GJNejNe5AUmJ4RwQZDZD';
 const APP_ACCESS_TOKEN = '2315860602131202|1Odqilsh0sZGC_NXgT_uL7LL-x0';
-let USER_ACCESS_TOKEN = 'EAAg6Q1CKEwIBOZB6CjjwZCAhUJGl2p0NrblmlbiF6D1E5ilrUwiIpG4IW7XskVWa7WNGoNiwiiQnsPrQCyFJcTWZBilAtN3gXLP8goSZAtJfwoN95RCmO2SDkTXCGJYz6ZBxxdXbLrZCXomvJhjmNQpBoxoFaHZAZCg7fwzesOceQC3hrzdbGG0ZAsmJS5hQ84x3K3w3olZBOea2eassgSxSZB74euMus58ixdcE0YD0vCVIeqe';
+const USER_ACCESS_TOKEN = 'EAAg6Q1CKEwIBOZB6CjjwZCAhUJGl2p0NrblmlbiF6D1E5ilrUwiIpG4IW7XskVWa7WNGoNiwiiQnsPrQCyFJcTWZBilAtN3gXLP8goSZAtJfwoN95RCmO2SDkTXCGJYz6ZBxxdXbLrZCXomvJhjmNQpBoxoFaHZAZCg7fwzesOceQC3hrzdbGG0ZAsmJS5hQ84x3K3w3olZBOea2eassgSxSZB74euMus58ixdcE0YD0vCVIeqe';
 
 const app = express();
 app.use(express.static('public')); // Serve static files from the 'public' directory
 
+// Hàm để lấy token dựa trên loại token
 function getToken(tokenType) {
   if (tokenType === 'user') {
     return USER_ACCESS_TOKEN;
@@ -22,29 +23,12 @@ function getToken(tokenType) {
   }
 }
 
-async function refreshUserAccessToken() {
-  try {
-    const response = await axios.get(`https://graph.facebook.com/oauth/access_token`, {
-      params: {
-        grant_type: 'fb_exchange_token',
-        client_id: APP_ID,
-        client_secret: APP_SECRET,
-        fb_exchange_token: USER_ACCESS_TOKEN
-      }
-    });
-    USER_ACCESS_TOKEN = response.data.access_token;
-    console.log('User access token refreshed:', USER_ACCESS_TOKEN);
-  } catch (error) {
-    console.error('Error refreshing user access token:', error.response ? error.response.data : error.message);
-  }
-}
-
-setInterval(refreshUserAccessToken, 55 * 24 * 60 * 60 * 1000); // 55 days in milliseconds
-
+// Route để xử lý yêu cầu GET đến đường dẫn gốc "/"
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/public/index.html'); // Serve the index.html file
 });
 
+// Route để kiểm tra trạng thái webhook
 app.get('/check-webhook', async (req, res) => {
   const tokenType = req.query.tokenType || 'page';
   const accessToken = getToken(tokenType);
@@ -61,6 +45,7 @@ app.get('/check-webhook', async (req, res) => {
   }
 });
 
+// Route để ngắt kết nối webhook thủ công
 app.post('/disable-webhook', async (req, res) => {
   const tokenType = req.query.tokenType || 'page';
   const accessToken = getToken(tokenType);
@@ -78,6 +63,7 @@ app.post('/disable-webhook', async (req, res) => {
   }
 });
 
+// Route để kích hoạt lại webhook thủ công
 app.post('/enable-webhook', async (req, res) => {
   const tokenType = req.query.tokenType || 'page';
   const accessToken = getToken(tokenType);
@@ -96,6 +82,7 @@ app.post('/enable-webhook', async (req, res) => {
   }
 });
 
+// Hàm để ngắt kết nối webhook
 async function disableWebhook(tokenType = 'page') {
   const accessToken = getToken(tokenType);
 
@@ -111,6 +98,7 @@ async function disableWebhook(tokenType = 'page') {
   }
 }
 
+// Hàm để kết nối lại webhook
 async function enableWebhook(tokenType = 'page') {
   const accessToken = getToken(tokenType);
 
@@ -127,11 +115,13 @@ async function enableWebhook(tokenType = 'page') {
   }
 }
 
+// Lên lịch ngắt kết nối webhook vào lúc 8:00 sáng mỗi ngày
 cron.schedule('0 8 * * *', function() {
   console.log('Disabling webhook at 8:00 AM');
   disableWebhook('app');
 });
 
+// Lên lịch kết nối lại webhook vào lúc 5:00 chiều mỗi ngày
 cron.schedule('0 17 * * *', function() {
   console.log('Enabling webhook at 5:00 PM');
   enableWebhook('app');
