@@ -1,6 +1,6 @@
-import express from 'express';
-import axios from 'axios';
-import cron from 'node-cron';
+const express = require('express');
+const axios = require('axios');
+const cron = require('node-cron');
 
 const PAGE_ID = '263242860207661';
 const APP_ID = '231586060213120';
