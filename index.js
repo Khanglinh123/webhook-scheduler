@@ -1,4 +1,34 @@
-// Hàm để lấy token và ID dựa trên loại token
+import express from 'express';
+import axios from 'axios';
+import cron from 'node-cron';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+const PAGES = [
+  {
+    id: '583129331554040',
+    token: process.env.PAGE_ACCESS_TOKEN_1
+  },
+  {
+    id: '263242860207661',
+    token: process.env.PAGE_ACCESS_TOKEN_2
+  },
+  {
+    id: '591609024032061',
+    token: process.env.PAGE_ACCESS_TOKEN_3
+  }
+];
+
+const APP_ID = process.env.APP_ID;
+const APP_SECRET = process.env.APP_SECRET;
+const APP_ACCESS_TOKEN = process.env.APP_ACCESS_TOKEN;
+const USER_ACCESS_TOKEN = process.env.USER_ACCESS_TOKEN;
+
+const app = express();  // Chúng ta cần khai báo và khởi tạo biến app ở đây
+app.use(express.static('public')); // Serve static files from the 'public' directory
+
+// Hàm để lấy thông tin trang dựa trên chỉ số trang
 function getPageInfo(pageIndex) {
   const index = parseInt(pageIndex, 10);
   if (isNaN(index) || index < 1 || index > PAGES.length) {
@@ -7,6 +37,7 @@ function getPageInfo(pageIndex) {
   return PAGES[index - 1];
 }
 
+// Hàm để lấy token dựa trên loại token hoặc chỉ số trang
 function getToken(tokenType) {
   if (tokenType === 'user') {
     return USER_ACCESS_TOKEN;
@@ -131,3 +162,20 @@ async function enableWebhook(tokenType = 'page:1') {
     console.log('Error while enabling webhook:', error.response ? error.response.data : error.message);
   }
 }
+
+// Lên lịch ngắt kết nối webhook vào lúc 8:00 sáng mỗi ngày
+cron.schedule('0 8 * * *', function() {
+  console.log('Disabling webhook at 8:00 AM');
+  disableWebhook('app');
+});
+
+// Lên lịch kết nối lại webhook vào lúc 5:00 chiều mỗi ngày
+cron.schedule('0 17 * * *', function() {
+  console.log('Enabling webhook at 5:00 PM');
+  enableWebhook('app');
+});
+
+app.listen(10000, () => {
+  console.log('Server running on port 10000');
+  console.log('Webhook scheduler setup complete!');
+});
