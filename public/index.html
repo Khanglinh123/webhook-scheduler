@@ -7,13 +7,22 @@
 </head>
 <body>
   <h1>Webhook Scheduler Control</h1>
+  <select id="tokenType">
+    <option value="page">Page Token</option>
+    <option value="user">User Token</option>
+  </select>
   <button onclick="disableWebhook()">Disable Webhook</button>
   <button onclick="enableWebhook()">Enable Webhook</button>
 
   <script>
+    function getTokenType() {
+      return document.getElementById('tokenType').value;
+    }
+
     async function disableWebhook() {
+      const tokenType = getTokenType();
       try {
-        const response = await fetch('/disable-webhook', { method: 'POST' });
+        const response = await fetch(`/disable-webhook?tokenType=${tokenType}`, { method: 'POST' });
         const text = await response.text();
         alert(text);
       } catch (error) {
@@ -22,8 +31,9 @@
     }
 
     async function enableWebhook() {
+      const tokenType = getTokenType();
       try {
-        const response = await fetch('/enable-webhook', { method: 'POST' });
+        const response = await fetch(`/enable-webhook?tokenType=${tokenType}`, { method: 'POST' });
         const text = await response.text();
         alert(text);
       } catch (error) {
