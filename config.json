@@ -1,0 +1,17 @@
+{
+  "pages": [
+    {
+      "page_id": "PAGE_ID_1",
+      "page_access_token": "PAGE_ACCESS_TOKEN_1"
+    },
+    {
+      "page_id": "PAGE_ID_2",
+      "page_access_token": "PAGE_ACCESS_TOKEN_2"
+    },
+    {
+      "page_id": "PAGE_ID_3",
+      "page_access_token": "PAGE_ACCESS_TOKEN_3"
+    }
+    // Add more pages as needed
+  ]
+}
