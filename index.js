@@ -12,6 +12,15 @@ const USER_ACCESS_TOKEN = 'EAAg6Q1CKEwIBOZB6CjjwZCAhUJGl2p0NrblmlbiF6D1E5ilrUwiI
 const app = express();
 app.use(express.static('public')); // Serve static files from the 'public' directory
 
+// Hàm để lấy token dựa trên loại token
+function getToken(tokenType) {
+  if (tokenType === 'user') {
+    return USER_ACCESS_TOKEN;
+  } else {
+    return PAGE_ACCESS_TOKEN;
+  }
+}
+
 // Route để xử lý yêu cầu GET đến đường dẫn gốc "/"
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/public/index.html'); // Serve the index.html file
@@ -19,10 +28,13 @@ app.get('/', (req, res) => {
 
 // Route để kiểm tra trạng thái webhook
 app.get('/check-webhook', async (req, res) => {
+  const tokenType = req.query.tokenType || 'page';
+  const accessToken = getToken(tokenType);
+
   try {
     const response = await axios.get(`https://graph.facebook.com/v11.0/${PAGE_ID}/subscribed_apps`, {
       params: {
-        access_token: PAGE_ACCESS_TOKEN
+        access_token: accessToken
       }
     });
     res.json(response.data);
@@ -33,10 +45,13 @@ app.get('/check-webhook', async (req, res) => {
 
 // Route để ngắt kết nối webhook thủ công
 app.post('/disable-webhook', async (req, res) => {
+  const tokenType = req.query.tokenType || 'page';
+  const accessToken = getToken(tokenType);
+
   try {
     const response = await axios.delete(`https://graph.facebook.com/v11.0/${PAGE_ID}/subscribed_apps`, {
       params: {
-        access_token: PAGE_ACCESS_TOKEN
+        access_token: accessToken
       }
     });
     res.send('Webhook disabled manually.');
@@ -48,10 +63,13 @@ app.post('/disable-webhook', async (req, res) => {
 
 // Route để kích hoạt lại webhook thủ công
 app.post('/enable-webhook', async (req, res) => {
+  const tokenType = req.query.tokenType || 'page';
+  const accessToken = getToken(tokenType);
+
   try {
     const response = await axios.post(`https://graph.facebook.com/v11.0/${PAGE_ID}/subscribed_apps`, null, {
       params: {
-        access_token: PAGE_ACCESS_TOKEN,
+        access_token: accessToken,
         subscribed_fields: 'messages'
       }
     });
@@ -63,11 +81,13 @@ app.post('/enable-webhook', async (req, res) => {
 });
 
 // Hàm để ngắt kết nối webhook
-async function disableWebhook() {
+async function disableWebhook(tokenType = 'page') {
+  const accessToken = getToken(tokenType);
+
   try {
     const response = await axios.delete(`https://graph.facebook.com/v11.0/${PAGE_ID}/subscribed_apps`, {
       params: {
-        access_token: PAGE_ACCESS_TOKEN
+        access_token: accessToken
       }
     });
     console.log('Webhook disabled:', response.data);
@@ -77,11 +97,13 @@ async function disableWebhook() {
 }
 
 // Hàm để kết nối lại webhook
-async function enableWebhook() {
+async function enableWebhook(tokenType = 'page') {
+  const accessToken = getToken(tokenType);
+
   try {
     const response = await axios.post(`https://graph.facebook.com/v11.0/${PAGE_ID}/subscribed_apps`, null, {
       params: {
-        access_token: PAGE_ACCESS_TOKEN,
+        access_token: accessToken,
         subscribed_fields: 'messages'
       }
     });
