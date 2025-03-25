@@ -156,8 +156,8 @@ app.listen(10000, () => {
 
 ### Đẩy thay đổi lên GitHub và triển khai lại trên Render
 
-1. **Lưu các thay đổi**: Lưu tất cả các thay đổi trong các tệp `index.js` và `index.html`.
+1. **Lưu các thay đổi**: Lưu tất cả các thay đổi trong các tệp `index.js`.
 2. **Đẩy thay đổi lên GitHub**: Đảm bảo rằng bạn đã đẩy các thay đổi này lên kho GitHub của mình.
 3. **Triển khai lại trên Render**: Truy cập trang quản lý của ứng dụng trên Render và triển khai lại ứng dụng của bạn.
 
-Bằng cách này, mã truy cập của bạn sẽ được làm mới tự động trước khi hết hạn và webhook sẽ được tắt/bật theo lịch trình đã định.
+Với các thay đổi này, mã truy cập dài hạn của bạn sẽ được làm mới tự động trước khi hết hạn và webhook sẽ được tắt/bật theo lịch trình đã định.
