@@ -8,7 +8,7 @@ const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
 
 const APP_ID = '231586060213120';
 const APP_SECRET = 'ecb35f0156838eb14f7cb747f3544887';
-let USER_ACCESS_TOKEN = 'EAAg6Q1CKEwIBO91rEk8MGG0ZAWE3Sl17SY7QCY4g64vPZAH7SwWZB1oR8JUzGWZBs3zNZBFNZCV7SmATIJMp9lRjGoa5pFicHgDvNTxCRunFmX63akD24BZC7R5YKAhT97RM2mzEo9vmk5uDb3JG6z1nrIj7kOmbIKdgsowpDavCm3bUdRsaV7CGXoXmNDMWy0FAtTeYZC5xcaUl58cRZB9MO8IaMraHJA1H6RjQZD';
+let USER_ACCESS_TOKEN = 'EAAg6Q1CKEwIBOZB6CjjwZCAhUJGl2p0NrblmlbiF6D1E5ilrUwiIpG4IW7XskVWa7WNGoNiwiiQnsPrQCyFJcTWZBilAtN3gXLP8goSZAtJfwoN95RCmO2SDkTXCGJYz6ZBxxdXbLrZCXomvJhjmNQpBoxoFaHZAZCg7fwzesOceQC3hrzdbGG0ZAsmJS5hQ84x3K3w3olZBOea2eassgSxSZB74euMus58ixdcE0YD0vCVIeqe';
 
 const app = express();
 app.use(express.static('public')); // Serve static files from the 'public' directory
@@ -158,13 +158,3 @@ app.listen(10000, () => {
   console.log('Server running on port 10000');
   console.log('Webhook scheduler setup complete!');
 });
-```
-
-### Đẩy thay đổi lên GitHub và triển khai lại trên Render
-
-1. **Tạo tệp `config.json`**: Tạo tệp `config.json` trong thư mục gốc của dự án và điền thông tin về các trang của bạn.
-2. **Lưu các thay đổi**: Lưu tất cả các thay đổi trong tệp `index.js`.
-3. **Đẩy thay đổi lên GitHub**: Đảm bảo rằng bạn đã đẩy các thay đổi này lên kho GitHub của mình.
-4. **Triển khai lại trên Render**: Truy cập trang quản lý của ứng dụng trên Render và triển khai lại ứng dụng của bạn.
-
-Bằng cách này, bạn có thể quản lý nhiều trang và mã truy cập của chúng một cách hiệu quả và tự động hóa quy trình tắt/bật webhook theo lịch trình.
