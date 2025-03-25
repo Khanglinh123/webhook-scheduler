@@ -2,145 +2,39 @@ import express from 'express';
 import axios from 'axios';
 import cron from 'node-cron';
 
-// App credentials
+const PAGE_ID = '583129331554040';
 const APP_ID = '231586060213120';
 const APP_SECRET = 'ecb35f0156838eb14f7cb747f3544887';
+const PAGE_ACCESS_TOKEN = 'EAAg6Q1CKEwIBOxillAuZAjLb2dHUbxgHsZAQQvXSkREWcoXFvpiRwR3Jbh7TIJy70PZBBgO1BGTfkUxVpiLIEwTLSZBKqS2mZCoVGv9NGCA1q59bEOWzoQhL1KTQCrmQ1BU3ZB4Pa16GZCoLQrWIlIv1Qk9Ra1ZC59bml3FPrHqLph2lcdsBF9GJNejNe5AUmJ4RwQZDZD';
 const APP_ACCESS_TOKEN = '2315860602131202|1Odqilsh0sZGC_NXgT_uL7LL-x0';
-
-// Danh sách các trang
-const pages = [
-  {
-    page_id: '583129331554040',
-    name: 'Trợ Lý Khang Mạch Linh',
-    page_access_token: 'EAAg6Q1CKEwIBOxillAuZAjLb2dHUbxgHsZAQQvXSkREWcoXFvpiRwR3Jbh7TIJy70PZBBgO1BGTfkUxVpiLIEwTLSZBKqS2mZCoVGv9NGCA1q59bEOWzoQhL1KTQCrmQ1BU3ZB4Pa16GZCoLQrWIlIv1Qk9Ra1ZC59bml3FPrHqLph2lcdsBF9GJNejNe5AUmJ4RwQZDZD'
-  },
-  // Thêm các trang khác nếu cần
-  {
-    page_id: '263242860207661',
-    name: 'Khang Thống Linh - Giảm các triệu chứng Gout hiệu quả',
-    page_access_token: 'EAAg6Q1CKEwIBO2dZA39x8RsojOMmYrpGZCUvPWm3lwzFheZBIGQLAVVOUK57MPLr5q7m9tATWYXIL5GlTAczlj9UQcqOFn7BDPZCpx4FQi6UVSezIrLxkzZBGLnRUmnwkgevAek5Vh7nPnO6ZBOf7A8VmCZBzZBqfJEUAqxTrZBsdVgwY4RuQQzPnCGeaBgZB4JxWbTemu9I46eNPv4rPK'
-  },
-  {
-    page_id: '591609024032061',
-    name: 'Trợ Lý Khang Thống Linh',
-    page_access_token: 'EAAg6Q1CKEwIBO0iJgMjMhOAWHux9kIjFS9rIm4SqZBv1TiUB7rZBu3eh3deyL7GZCp8YjmSGpQE4tasZBiZCC3HB2tS1MhmZBN3mRdjA3C6lIo7NnqF2YdB7hVbHO10XJpfl8ZCZCMySUPZC03bzz3Rv343h1ZBUsPQqkAgGZA1AZCqCd81FrN84zW0ryrQsrUdeLQCZBbCLwxBI2uMaKlpfJdQZDZD'
-  },
-];
+const USER_ACCESS_TOKEN = 'EAAg6Q1CKEwIBOZB6CjjwZCAhUJGl2p0NrblmlbiF6D1E5ilrUwiIpG4IW7XskVWa7WNGoNiwiiQnsPrQCyFJcTWZBilAtN3gXLP8goSZAtJfwoN95RCmO2SDkTXCGJYz6ZBxxdXbLrZCXomvJhjmNQpBoxoFaHZAZCg7fwzesOceQC3hrzdbGG0ZAsmJS5hQ84x3K3w3olZBOea2eassgSxSZB74euMus58ixdcE0YD0vCVIeqe';
 
 const app = express();
-app.use(express.static('public'));
+app.use(express.static('public')); // Serve static files from the 'public' directory
 
 // Hàm để lấy token dựa trên loại token
-function getToken(tokenType, pageId) {
-  if (tokenType === 'app') {
+function getToken(tokenType) {
+  if (tokenType === 'user') {
+    return USER_ACCESS_TOKEN;
+  } else if (tokenType === 'app') {
     return APP_ACCESS_TOKEN;
   } else {
-    // Tìm page access token cho trang cụ thể
-    const page = pages.find(p => p.page_id === pageId);
-    return page ? page.page_access_token : null;
+    return PAGE_ACCESS_TOKEN;
   }
 }
 
 // Route để xử lý yêu cầu GET đến đường dẫn gốc "/"
 app.get('/', (req, res) => {
-  res.send(`
-    <html>
-      <head>
-        <title>Webhook Manager</title>
-        <style>
-          body { font-family: Arial, sans-serif; margin: 20px; }
-          h1 { color: #333; }
-          .page { margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
-          button { margin-right: 10px; padding: 8px 12px; cursor: pointer; }
-          .status { margin-top: 10px; padding: 10px; background-color: #f5f5f5; border-radius: 5px; }
-        </style>
-      </head>
-      <body>
-        <h1>Facebook Webhook Manager</h1>
-        <div id="pages-container"></div>
-        <div id="status" class="status" style="display: none;"></div>
-        
-        <script>
-          // Hiển thị danh sách các trang
-          const pages = ${JSON.stringify(pages)};
-          const container = document.getElementById('pages-container');
-          
-          pages.forEach(page => {
-            const pageDiv = document.createElement('div');
-            pageDiv.className = 'page';
-            pageDiv.innerHTML = \`
-              <h2>\${page.name || 'Page ' + page.page_id}</h2>
-              <p>Page ID: \${page.page_id}</p>
-              <div>
-                <button onclick="checkStatus('\${page.page_id}')">Kiểm tra trạng thái</button>
-                <button onclick="disableWebhook('\${page.page_id}')">Ngắt kết nối</button>
-                <button onclick="enableWebhook('\${page.page_id}')">Kết nối</button>
-              </div>
-              <div id="status-\${page.page_id}" class="status" style="display: none;"></div>
-            \`;
-            container.appendChild(pageDiv);
-          });
-          
-          // Hàm kiểm tra trạng thái
-          function checkStatus(pageId) {
-            fetch(\`/check-webhook?pageId=\${pageId}\`)
-              .then(response => response.json())
-              .then(data => {
-                showStatus(pageId, data);
-              })
-              .catch(error => {
-                showStatus(pageId, { error: error.message });
-              });
-          }
-          
-          // Hàm ngắt kết nối
-          function disableWebhook(pageId) {
-            fetch(\`/disable-webhook?pageId=\${pageId}\`, { method: 'POST' })
-              .then(response => response.text())
-              .then(data => {
-                showStatus(pageId, { message: data });
-              })
-              .catch(error => {
-                showStatus(pageId, { error: error.message });
-              });
-          }
-          
-          // Hàm kết nối
-          function enableWebhook(pageId) {
-            fetch(\`/enable-webhook?pageId=\${pageId}\`, { method: 'POST' })
-              .then(response => response.text())
-              .then(data => {
-                showStatus(pageId, { message: data });
-              })
-              .catch(error => {
-                showStatus(pageId, { error: error.message });
-              });
-          }
-          
-          // Hiển thị trạng thái
-          function showStatus(pageId, data) {
-            const statusDiv = document.getElementById(\`status-\${pageId}\`);
-            statusDiv.style.display = 'block';
-            statusDiv.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
-          }
-        </script>
-      </body>
-    </html>
-  `);
+  res.sendFile(__dirname + '/public/index.html'); // Serve the index.html file
 });
 
 // Route để kiểm tra trạng thái webhook
 app.get('/check-webhook', async (req, res) => {
-  const pageId = req.query.pageId;
-  const tokenType = req.query.tokenType || 'app';
-  const accessToken = getToken(tokenType, pageId);
-
-  if (!accessToken) {
-    return res.status(400).json({ error: 'Invalid page ID' });
-  }
+  const tokenType = req.query.tokenType || 'page';
+  const accessToken = getToken(tokenType);
 
   try {
-    const response = await axios.get(`https://graph.facebook.com/v18.0/${pageId}/subscribed_apps`, {
+    const response = await axios.get(`https://graph.facebook.com/v11.0/${PAGE_ID}/subscribed_apps`, {
       params: {
         access_token: accessToken
       }
@@ -153,21 +47,16 @@ app.get('/check-webhook', async (req, res) => {
 
 // Route để ngắt kết nối webhook thủ công
 app.post('/disable-webhook', async (req, res) => {
-  const pageId = req.query.pageId;
-  const tokenType = req.query.tokenType || 'app';
-  const accessToken = getToken(tokenType, pageId);
-
-  if (!accessToken) {
-    return res.status(400).send('Invalid page ID');
-  }
+  const tokenType = req.query.tokenType || 'page';
+  const accessToken = getToken(tokenType);
 
   try {
-    const response = await axios.delete(`https://graph.facebook.com/v18.0/${pageId}/subscribed_apps`, {
+    const response = await axios.delete(`https://graph.facebook.com/v11.0/${PAGE_ID}/subscribed_apps`, {
       params: {
         access_token: accessToken
       }
     });
-    res.send(`Webhook disabled for page ${pageId}`);
+    res.send('Webhook disabled manually.');
   } catch (error) {
     console.error('Error disabling webhook:', error.response ? error.response.data : error.message);
     res.status(500).send('Error disabling webhook: ' + JSON.stringify(error.response ? error.response.data : error.message));
@@ -176,114 +65,69 @@ app.post('/disable-webhook', async (req, res) => {
 
 // Route để kích hoạt lại webhook thủ công
 app.post('/enable-webhook', async (req, res) => {
-  const pageId = req.query.pageId;
-  const tokenType = req.query.tokenType || 'app';
-  const accessToken = getToken(tokenType, pageId);
-
-  if (!accessToken) {
-    return res.status(400).send('Invalid page ID');
-  }
+  const tokenType = req.query.tokenType || 'page';
+  const accessToken = getToken(tokenType);
 
   try {
-    const response = await axios.post(`https://graph.facebook.com/v18.0/${pageId}/subscribed_apps`, null, {
+    const response = await axios.post(`https://graph.facebook.com/v11.0/${PAGE_ID}/subscribed_apps`, null, {
       params: {
         access_token: accessToken,
-        subscribed_fields: 'messages,messaging_postbacks,messaging_optins'
+        subscribed_fields: 'messages'
       }
     });
-    res.send(`Webhook enabled for page ${pageId}`);
+    res.send('Webhook enabled manually.');
   } catch (error) {
     console.error('Error enabling webhook:', error.response ? error.response.data : error.message);
     res.status(500).send('Error enabling webhook: ' + JSON.stringify(error.response ? error.response.data : error.message));
   }
 });
 
-// Hàm để ngắt kết nối webhook cho một trang
-async function disableWebhook(pageId, tokenType = 'app') {
-  const accessToken = getToken(tokenType, pageId);
-
-  if (!accessToken) {
-    console.error(`Invalid page ID: ${pageId}`);
-    return;
-  }
+// Hàm để ngắt kết nối webhook
+async function disableWebhook(tokenType = 'page') {
+  const accessToken = getToken(tokenType);
 
   try {
-    const response = await axios.delete(`https://graph.facebook.com/v18.0/${pageId}/subscribed_apps`, {
+    const response = await axios.delete(`https://graph.facebook.com/v11.0/${PAGE_ID}/subscribed_apps`, {
       params: {
         access_token: accessToken
       }
     });
-    console.log(`Webhook disabled for page ${pageId}:`, response.data);
+    console.log('Webhook disabled:', response.data);
   } catch (error) {
-    console.error(`Error while disabling webhook for page ${pageId}:`, error.response ? error.response.data : error.message);
+    console.log('Error while disabling webhook:', error.response ? error.response.data : error.message);
   }
 }
 
-// Hàm để kết nối lại webhook cho một trang
-async function enableWebhook(pageId, tokenType = 'app') {
-  const accessToken = getToken(tokenType, pageId);
-
-  if (!accessToken) {
-    console.error(`Invalid page ID: ${pageId}`);
-    return;
-  }
+// Hàm để kết nối lại webhook
+async function enableWebhook(tokenType = 'page') {
+  const accessToken = getToken(tokenType);
 
   try {
-    const response = await axios.post(`https://graph.facebook.com/v18.0/${pageId}/subscribed_apps`, null, {
+    const response = await axios.post(`https://graph.facebook.com/v11.0/${PAGE_ID}/subscribed_apps`, null, {
       params: {
         access_token: accessToken,
-        subscribed_fields: 'messages,messaging_postbacks,messaging_optins'
+        subscribed_fields: 'messages'
       }
     });
-    console.log(`Webhook enabled for page ${pageId}:`, response.data);
+    console.log('Webhook enabled:', response.data);
   } catch (error) {
-    console.error(`Error while enabling webhook for page ${pageId}:`, error.response ? error.response.data : error.message);
+    console.log('Error while enabling webhook:', error.response ? error.response.data : error.message);
   }
 }
 
 // Lên lịch ngắt kết nối webhook vào lúc 8:00 sáng mỗi ngày
 cron.schedule('0 8 * * *', function() {
-  console.log('Disabling webhooks at 8:00 AM');
-  pages.forEach(page => {
-    disableWebhook(page.page_id, 'app');
-  });
-}, {
-  timezone: "Asia/Ho_Chi_Minh"
+  console.log('Disabling webhook at 8:00 AM');
+  disableWebhook('app');
 });
 
 // Lên lịch kết nối lại webhook vào lúc 5:00 chiều mỗi ngày
 cron.schedule('0 17 * * *', function() {
-  console.log('Enabling webhooks at 5:00 PM');
-  pages.forEach(page => {
-    enableWebhook(page.page_id, 'app');
-  });
-}, {
-  timezone: "Asia/Ho_Chi_Minh"
+  console.log('Enabling webhook at 5:00 PM');
+  enableWebhook('app');
 });
 
-// Kiểm tra trạng thái webhook khi khởi động
-async function checkAllWebhooks() {
-  console.log('Checking all webhooks on startup...');
-  for (const page of pages) {
-    try {
-      const response = await axios.get(`https://graph.facebook.com/v18.0/${page.page_id}/subscribed_apps`, {
-        params: {
-          access_token: APP_ACCESS_TOKEN
-        }
-      });
-      console.log(`Webhook status for page ${page.page_id}:`, response.data);
-    } catch (error) {
-      console.error(`Error checking webhook for page ${page.page_id}:`, error.response ? error.response.data : error.message);
-    }
-  }
-}
-
-// Khởi động server
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+app.listen(10000, () => {
+  console.log('Server running on port 10000');
   console.log('Webhook scheduler setup complete!');
-  
-  // Kiểm tra trạng thái webhook khi khởi động
-  checkAllWebhooks();
 });
