@@ -1,68 +1,40 @@
 import express from 'express';
 import axios from 'axios';
 import cron from 'node-cron';
-import dotenv from 'dotenv';
 
-dotenv.config();
-
-const PAGES = [
-  {
-    id: '583129331554040',
-    token: process.env.PAGE_ACCESS_TOKEN_1
-  },
-  {
-    id: '263242860207661',
-    token: process.env.PAGE_ACCESS_TOKEN_2
-  },
-  {
-    id: '591609024032061',
-    token: process.env.PAGE_ACCESS_TOKEN_3
-  }
-];
-
-const APP_ID = process.env.APP_ID;
-const APP_SECRET = process.env.APP_SECRET;
-const APP_ACCESS_TOKEN = process.env.APP_ACCESS_TOKEN;
-const USER_ACCESS_TOKEN = process.env.USER_ACCESS_TOKEN;
+const PAGE_ID = '583129331554040';
+const APP_ID = '231586060213120';
+const APP_SECRET = 'ecb35f0156838eb14f7cb747f3544887';
+const PAGE_ACCESS_TOKEN = 'EAAg6Q1CKEwIBOxillAuZAjLb2dHUbxgHsZAQQvXSkREWcoXFvpiRwR3Jbh7TIJy70PZBBgO1BGTfkUxVpiLIEwTLSZBKqS2mZCoVGv9NGCA1q59bEOWzoQhL1KTQCrmQ1BU3ZB4Pa16GZCoLQrWIlIv1Qk9Ra1ZC59bml3FPrHqLph2lcdsBF9GJNejNe5AUmJ4RwQZDZD';
+const APP_ACCESS_TOKEN = '2315860602131202|1Odqilsh0sZGC_NXgT_uL7LL-x0';
+const USER_ACCESS_TOKEN = 'EAAg6Q1CKEwIBOZB6CjjwZCAhUJGl2p0NrblmlbiF6D1E5ilrUwiIpG4IW7XskVWa7WNGoNiwiiQnsPrQCyFJcTWZBilAtN3gXLP8goSZAtJfwoN95RCmO2SDkTXCGJYz6ZBxxdXbLrZCXomvJhjmNQpBoxoFaHZAZCg7fwzesOceQC3hrzdbGG0ZAsmJS5hQ84x3K3w3olZBOea2eassgSxSZB74euMus58ixdcE0YD0vCVIeqe';
 
 const app = express();
 app.use(express.static('public')); // Serve static files from the 'public' directory
 
-// Hàm để lấy thông tin trang dựa trên chỉ số trang
-function getPageInfo(pageIndex) {
-  const index = parseInt(pageIndex, 10);
-  if (isNaN(index) || index < 1 || index > PAGES.length) {
-    return null;
-  }
-  return PAGES[index - 1];
-}
-
-// Hàm để lấy token dựa trên loại token hoặc chỉ số trang
+// Hàm để lấy token dựa trên loại token
 function getToken(tokenType) {
   if (tokenType === 'user') {
     return USER_ACCESS_TOKEN;
   } else if (tokenType === 'app') {
     return APP_ACCESS_TOKEN;
-  } else if (tokenType.startsWith('page')) {
-    const pageInfo = getPageInfo(tokenType.split(':')[1]);
-    return pageInfo ? pageInfo.token : null;
+  } else {
+    return PAGE_ACCESS_TOKEN;
   }
-  return null;
 }
+
+// Route để xử lý yêu cầu GET đến đường dẫn gốc "/"
+app.get('/', (req, res) => {
+  res.sendFile(__dirname + '/public/index.html'); // Serve the index.html file
+});
 
 // Route để kiểm tra trạng thái webhook
 app.get('/check-webhook', async (req, res) => {
-  const tokenType = req.query.tokenType || 'page:1';
-  const pageIndex = tokenType.split(':')[1];
-  const pageInfo = getPageInfo(pageIndex);
+  const tokenType = req.query.tokenType || 'page';
   const accessToken = getToken(tokenType);
 
-  if (!pageInfo) {
-    return res.status(400).json({ error: 'Invalid token type' });
-  }
-
   try {
-    const response = await axios.get(`https://graph.facebook.com/v11.0/${pageInfo.id}/subscribed_apps`, {
+    const response = await axios.get(`https://graph.facebook.com/v11.0/${PAGE_ID}/subscribed_apps`, {
       params: {
         access_token: accessToken
       }
@@ -75,17 +47,11 @@ app.get('/check-webhook', async (req, res) => {
 
 // Route để ngắt kết nối webhook thủ công
 app.post('/disable-webhook', async (req, res) => {
-  const tokenType = req.query.tokenType || 'page:1';
-  const pageIndex = tokenType.split(':')[1];
-  const pageInfo = getPageInfo(pageIndex);
+  const tokenType = req.query.tokenType || 'page';
   const accessToken = getToken(tokenType);
 
-  if (!pageInfo) {
-    return res.status(400).json({ error: 'Invalid token type' });
-  }
-
   try {
-    const response = await axios.delete(`https://graph.facebook.com/v11.0/${pageInfo.id}/subscribed_apps`, {
+    const response = await axios.delete(`https://graph.facebook.com/v11.0/${PAGE_ID}/subscribed_apps`, {
       params: {
         access_token: accessToken
       }
@@ -99,17 +65,11 @@ app.post('/disable-webhook', async (req, res) => {
 
 // Route để kích hoạt lại webhook thủ công
 app.post('/enable-webhook', async (req, res) => {
-  const tokenType = req.query.tokenType || 'page:1';
-  const pageIndex = tokenType.split(':')[1];
-  const pageInfo = getPageInfo(pageIndex);
+  const tokenType = req.query.tokenType || 'page';
   const accessToken = getToken(tokenType);
 
-  if (!pageInfo) {
-    return res.status(400).json({ error: 'Invalid token type' });
-  }
-
   try {
-    const response = await axios.post(`https://graph.facebook.com/v11.0/${pageInfo.id}/subscribed_apps`, null, {
+    const response = await axios.post(`https://graph.facebook.com/v11.0/${PAGE_ID}/subscribed_apps`, null, {
       params: {
         access_token: accessToken,
         subscribed_fields: 'messages'
@@ -123,18 +83,11 @@ app.post('/enable-webhook', async (req, res) => {
 });
 
 // Hàm để ngắt kết nối webhook
-async function disableWebhook(tokenType = 'page:1') {
-  const pageIndex = tokenType.split(':')[1];
-  const pageInfo = getPageInfo(pageIndex);
+async function disableWebhook(tokenType = 'page') {
   const accessToken = getToken(tokenType);
 
-  if (!pageInfo) {
-    console.log('Invalid token type');
-    return;
-  }
-
   try {
-    const response = await axios.delete(`https://graph.facebook.com/v11.0/${pageInfo.id}/subscribed_apps`, {
+    const response = await axios.delete(`https://graph.facebook.com/v11.0/${PAGE_ID}/subscribed_apps`, {
       params: {
         access_token: accessToken
       }
@@ -146,18 +99,11 @@ async function disableWebhook(tokenType = 'page:1') {
 }
 
 // Hàm để kết nối lại webhook
-async function enableWebhook(tokenType = 'page:1') {
-  const pageIndex = tokenType.split(':')[1];
-  const pageInfo = getPageInfo(pageIndex);
+async function enableWebhook(tokenType = 'page') {
   const accessToken = getToken(tokenType);
 
-  if (!pageInfo) {
-    console.log('Invalid token type');
-    return;
-  }
-
   try {
-    const response = await axios.post(`https://graph.facebook.com/v11.0/${pageInfo.id}/subscribed_apps`, null, {
+    const response = await axios.post(`https://graph.facebook.com/v11.0/${PAGE_ID}/subscribed_apps`, null, {
       params: {
         access_token: accessToken,
         subscribed_fields: 'messages'
