@@ -11,15 +11,20 @@ const APP_ACCESS_TOKEN = '2315860602131202|1Odqilsh0sZGC_NXgT_uL7LL-x0';
 const pages = [
   {
     page_id: '583129331554040',
-    name: 'Trang 1',
+    name: 'Trợ Lý Khang Mạch Linh',
     page_access_token: 'EAAg6Q1CKEwIBOxillAuZAjLb2dHUbxgHsZAQQvXSkREWcoXFvpiRwR3Jbh7TIJy70PZBBgO1BGTfkUxVpiLIEwTLSZBKqS2mZCoVGv9NGCA1q59bEOWzoQhL1KTQCrmQ1BU3ZB4Pa16GZCoLQrWIlIv1Qk9Ra1ZC59bml3FPrHqLph2lcdsBF9GJNejNe5AUmJ4RwQZDZD'
   },
   // Thêm các trang khác nếu cần
-  // {
-  //   page_id: 'page_id_2',
-  //   name: 'Trang 2',
-  //   page_access_token: 'page_access_token_2'
-  // }
+  {
+    page_id: '263242860207661',
+    name: 'Khang Thống Linh - Giảm các triệu chứng Gout hiệu quả',
+    page_access_token: 'EAAg6Q1CKEwIBO2dZA39x8RsojOMmYrpGZCUvPWm3lwzFheZBIGQLAVVOUK57MPLr5q7m9tATWYXIL5GlTAczlj9UQcqOFn7BDPZCpx4FQi6UVSezIrLxkzZBGLnRUmnwkgevAek5Vh7nPnO6ZBOf7A8VmCZBzZBqfJEUAqxTrZBsdVgwY4RuQQzPnCGeaBgZB4JxWbTemu9I46eNPv4rPK'
+  },
+  {
+    page_id: '591609024032061',
+    name: 'Trợ Lý Khang Thống Linh',
+    page_access_token: 'EAAg6Q1CKEwIBO0iJgMjMhOAWHux9kIjFS9rIm4SqZBv1TiUB7rZBu3eh3deyL7GZCp8YjmSGpQE4tasZBiZCC3HB2tS1MhmZBN3mRdjA3C6lIo7NnqF2YdB7hVbHO10XJpfl8ZCZCMySUPZC03bzz3Rv343h1ZBUsPQqkAgGZA1AZCqCd81FrN84zW0ryrQsrUdeLQCZBbCLwxBI2uMaKlpfJdQZDZD'
+  },
 ];
 
 const app = express();
