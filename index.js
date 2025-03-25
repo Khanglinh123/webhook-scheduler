@@ -5,10 +5,23 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const PAGE_ID = '583129331554040';
+const PAGES = [
+  {
+    id: '583129331554040',
+    token: process.env.PAGE_ACCESS_TOKEN_1
+  },
+  {
+    id: '263242860207661',
+    token: process.env.PAGE_ACCESS_TOKEN_2
+  },
+  {
+    id: '591609024032061',
+    token: process.env.PAGE_ACCESS_TOKEN_3
+  }
+];
+
 const APP_ID = process.env.APP_ID;
 const APP_SECRET = process.env.APP_SECRET;
-const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
 const APP_ACCESS_TOKEN = process.env.APP_ACCESS_TOKEN;
 const USER_ACCESS_TOKEN = process.env.USER_ACCESS_TOKEN;
 
@@ -22,7 +35,9 @@ function getToken(tokenType) {
   } else if (tokenType === 'app') {
     return APP_ACCESS_TOKEN;
   } else {
-    return PAGE_ACCESS_TOKEN;
+    // Lấy token của page theo tokenType
+    const page = PAGES.find(page => page.token === tokenType);
+    return page ? page.token : null;
   }
 }
 
