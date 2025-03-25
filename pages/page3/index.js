@@ -1,6 +1,6 @@
-import express from 'express';
-import axios from 'axios';
-import cron from 'node-cron';
+const express = require('express');
+const axios = require('axios');
+const cron = require('node-cron');
 
 const PAGE_ID = '591609024032061';
 const APP_ID = '231586060213120';
@@ -65,4 +65,33 @@ app.post('/disable-webhook', async (req, res) => {
 
 // Route để kích hoạt lại webhook thủ công
 app.post('/enable-webhook', async (req, res) => {
-  const token
+  const tokenType = req.query.tokenType || 'page';
+  const accessToken = getToken(tokenType);
+
+  try {
+    const response = await axios.post(`https://graph.facebook.com/v11.0/${PAGE_ID}/subscribed_apps`, null, {
+      params: {
+        access_token: accessToken,
+        subscribed_fields: 'messages'
+      }
+    });
+    res.send('Webhook enabled manually.');
+  } catch (error) {
+    console.error('Error enabling webhook:', error.response ? error.response.data : error.message);
+    res.status(500).send('Error enabling webhook: ' + JSON.stringify(error.response ? error.response.data : error.message));
+  }
+});
+
+// Hàm để ngắt kết nối webhook
+async function disableWebhook(tokenType = 'page') {
+  const accessToken = getToken(tokenType);
+
+  try {
+    const response = await axios.delete(`https://graph.facebook.com/v11.0/${PAGE_ID}/subscribed_apps`, {
+      params: {
+        access_token: accessToken
+      }
+    });
+    console.log('Webhook disabled:', response.data);
+  } catch (error) {
+    console.log('Error while disabling webhook:', error.response ?
