@@ -16,6 +16,8 @@ app.use(express.static('public')); // Serve static files from the 'public' direc
 function getToken(tokenType) {
   if (tokenType === 'user') {
     return USER_ACCESS_TOKEN;
+  } else if (tokenType === 'app') {
+    return APP_ACCESS_TOKEN;
   } else {
     return PAGE_ACCESS_TOKEN;
   }
@@ -116,13 +118,13 @@ async function enableWebhook(tokenType = 'page') {
 // Lên lịch ngắt kết nối webhook vào lúc 8:00 sáng mỗi ngày
 cron.schedule('0 8 * * *', function() {
   console.log('Disabling webhook at 8:00 AM');
-  disableWebhook();
+  disableWebhook('app');
 });
 
 // Lên lịch kết nối lại webhook vào lúc 5:00 chiều mỗi ngày
 cron.schedule('0 17 * * *', function() {
   console.log('Enabling webhook at 5:00 PM');
-  enableWebhook();
+  enableWebhook('app');
 });
 
 app.listen(10000, () => {
