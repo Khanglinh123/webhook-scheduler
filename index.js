@@ -43,10 +43,11 @@ function getToken(tokenType) {
     return USER_ACCESS_TOKEN;
   } else if (tokenType === 'app') {
     return APP_ACCESS_TOKEN;
-  } else {
+  } else if (tokenType.startsWith('page')) {
     const pageInfo = getPageInfo(tokenType.split(':')[1]);
     return pageInfo ? pageInfo.token : null;
   }
+  return null;
 }
 
 // Route để kiểm tra trạng thái webhook
