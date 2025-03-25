@@ -28,16 +28,20 @@ const USER_ACCESS_TOKEN = process.env.USER_ACCESS_TOKEN;
 const app = express();
 app.use(express.static('public')); // Serve static files from the 'public' directory
 
-// Hàm để lấy token dựa trên loại token
+// Hàm để lấy token và ID dựa trên loại token
+function getPageInfo(tokenType) {
+  const page = PAGES.find(page => page.token === tokenType);
+  return page ? { id: page.id, token: page.token } : null;
+}
+
 function getToken(tokenType) {
   if (tokenType === 'user') {
     return USER_ACCESS_TOKEN;
   } else if (tokenType === 'app') {
     return APP_ACCESS_TOKEN;
   } else {
-    // Lấy token của page theo tokenType
-    const page = PAGES.find(page => page.token === tokenType);
-    return page ? page.token : null;
+    const pageInfo = getPageInfo(tokenType);
+    return pageInfo ? pageInfo.token : null;
   }
 }
 
@@ -49,10 +53,15 @@ app.get('/', (req, res) => {
 // Route để kiểm tra trạng thái webhook
 app.get('/check-webhook', async (req, res) => {
   const tokenType = req.query.tokenType || 'page';
-  const accessToken = getToken(tokenType);
+  const pageInfo = getPageInfo(tokenType);
+  const accessToken = pageInfo ? pageInfo.token : getToken(tokenType);
+
+  if (!pageInfo) {
+    return res.status(400).json({ error: 'Invalid token type' });
+  }
 
   try {
-    const response = await axios.get(`https://graph.facebook.com/v11.0/${PAGE_ID}/subscribed_apps`, {
+    const response = await axios.get(`https://graph.facebook.com/v11.0/${pageInfo.id}/subscribed_apps`, {
       params: {
         access_token: accessToken
       }
@@ -66,10 +75,15 @@ app.get('/check-webhook', async (req, res) => {
 // Route để ngắt kết nối webhook thủ công
 app.post('/disable-webhook', async (req, res) => {
   const tokenType = req.query.tokenType || 'page';
-  const accessToken = getToken(tokenType);
+  const pageInfo = getPageInfo(tokenType);
+  const accessToken = pageInfo ? pageInfo.token : getToken(tokenType);
+
+  if (!pageInfo) {
+    return res.status(400).json({ error: 'Invalid token type' });
+  }
 
   try {
-    const response = await axios.delete(`https://graph.facebook.com/v11.0/${PAGE_ID}/subscribed_apps`, {
+    const response = await axios.delete(`https://graph.facebook.com/v11.0/${pageInfo.id}/subscribed_apps`, {
       params: {
         access_token: accessToken
       }
@@ -84,10 +98,15 @@ app.post('/disable-webhook', async (req, res) => {
 // Route để kích hoạt lại webhook thủ công
 app.post('/enable-webhook', async (req, res) => {
   const tokenType = req.query.tokenType || 'page';
-  const accessToken = getToken(tokenType);
+  const pageInfo = getPageInfo(tokenType);
+  const accessToken = pageInfo ? pageInfo.token : getToken(tokenType);
+
+  if (!pageInfo) {
+    return res.status(400).json({ error: 'Invalid token type' });
+  }
 
   try {
-    const response = await axios.post(`https://graph.facebook.com/v11.0/${PAGE_ID}/subscribed_apps`, null, {
+    const response = await axios.post(`https://graph.facebook.com/v11.0/${pageInfo.id}/subscribed_apps`, null, {
       params: {
         access_token: accessToken,
         subscribed_fields: 'messages'
@@ -102,10 +121,16 @@ app.post('/enable-webhook', async (req, res) => {
 
 // Hàm để ngắt kết nối webhook
 async function disableWebhook(tokenType = 'page') {
-  const accessToken = getToken(tokenType);
+  const pageInfo = getPageInfo(tokenType);
+  const accessToken = pageInfo ? pageInfo.token : getToken(tokenType);
+
+  if (!pageInfo) {
+    console.log('Invalid token type');
+    return;
+  }
 
   try {
-    const response = await axios.delete(`https://graph.facebook.com/v11.0/${PAGE_ID}/subscribed_apps`, {
+    const response = await axios.delete(`https://graph.facebook.com/v11.0/${pageInfo.id}/subscribed_apps`, {
       params: {
         access_token: accessToken
       }
@@ -118,10 +143,16 @@ async function disableWebhook(tokenType = 'page') {
 
 // Hàm để kết nối lại webhook
 async function enableWebhook(tokenType = 'page') {
-  const accessToken = getToken(tokenType);
+  const pageInfo = getPageInfo(tokenType);
+  const accessToken = pageInfo ? pageInfo.token : getToken(tokenType);
+
+  if (!pageInfo) {
+    console.log('Invalid token type');
+    return;
+  }
 
   try {
-    const response = await axios.post(`https://graph.facebook.com/v11.0/${PAGE_ID}/subscribed_apps`, null, {
+    const response = await axios.post(`https://graph.facebook.com/v11.0/${pageInfo.id}/subscribed_apps`, null, {
       params: {
         access_token: accessToken,
         subscribed_fields: 'messages'
