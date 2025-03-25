@@ -1,13 +1,16 @@
 import express from 'express';
 import axios from 'axios';
 import cron from 'node-cron';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const PAGE_ID = '583129331554040';
-const APP_ID = '231586060213120';
-const APP_SECRET = 'ecb35f0156838eb14f7cb747f3544887';
-const PAGE_ACCESS_TOKEN = 'EAAg6Q1CKEwIBOxillAuZAjLb2dHUbxgHsZAQQvXSkREWcoXFvpiRwR3Jbh7TIJy70PZBBgO1BGTfkUxVpiLIEwTLSZBKqS2mZCoVGv9NGCA1q59bEOWzoQhL1KTQCrmQ1BU3ZB4Pa16GZCoLQrWIlIv1Qk9Ra1ZC59bml3FPrHqLph2lcdsBF9GJNejNe5AUmJ4RwQZDZD';
-const APP_ACCESS_TOKEN = '2315860602131202|1Odqilsh0sZGC_NXgT_uL7LL-x0';
-const USER_ACCESS_TOKEN = 'EAAg6Q1CKEwIBOZB6CjjwZCAhUJGl2p0NrblmlbiF6D1E5ilrUwiIpG4IW7XskVWa7WNGoNiwiiQnsPrQCyFJcTWZBilAtN3gXLP8goSZAtJfwoN95RCmO2SDkTXCGJYz6ZBxxdXbLrZCXomvJhjmNQpBoxoFaHZAZCg7fwzesOceQC3hrzdbGG0ZAsmJS5hQ84x3K3w3olZBOea2eassgSxSZB74euMus58ixdcE0YD0vCVIeqe';
+const APP_ID = process.env.APP_ID;
+const APP_SECRET = process.env.APP_SECRET;
+const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
+const APP_ACCESS_TOKEN = process.env.APP_ACCESS_TOKEN;
+const USER_ACCESS_TOKEN = process.env.USER_ACCESS_TOKEN;
 
 const app = express();
 app.use(express.static('public')); // Serve static files from the 'public' directory
